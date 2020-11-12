@@ -4,13 +4,16 @@ import NumberDisplay from '../NumberDisplay';
 import { generateCells } from '../../utils';
 import Button from '../Button';
 
+
+
 const Mine: React.FC = () => {
     const [cells, setCells] = useState(generateCells());
     // console.log('cells', cells);
 
     const renderCells = (): React.ReactNode => {
-        return cells.map((row, rowIndex) => row.map((cell, colIndex) => <Button key={`${rowIndex}- ${colIndex}`} />))
+        return cells.map((row, rowIndex) => row.map((cell, colIndex) => <Button key={`${rowIndex}- ${colIndex}`} state={cell.state} value={cell.value} row={rowIndex} col={colIndex} />))
     }
+
 
     return (
         <div className="Mine">
@@ -29,7 +32,6 @@ const Mine: React.FC = () => {
             <div className="Body">
                 {renderCells()}
             </div>
-
         </div>
     )
 }
