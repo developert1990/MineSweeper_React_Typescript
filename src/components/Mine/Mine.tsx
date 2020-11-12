@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './Mine.scss';
 import NumberDisplay from '../NumberDisplay';
-import { generateCells } from '../../utils';
+import { generateCells, openMultipleCells } from '../../utils';
 import Button from '../Button';
-import { CellState, CellType, Face } from '../../types';
+import { CellState, CellType, CellValue, Face } from '../../types';
 
 
 
@@ -49,9 +49,32 @@ const Mine: React.FC = () => {
 
     const handleCellClick = (rowParam: number, colParam: number) => (): void => {
         // console.log(rowParam, colParam);
+        // start the game !!
         if (!live) {
+
             setLive(true);
         }
+
+        const currentCell = cells[rowParam][colParam];
+        let newCells = cells.slice(); // 새로운 배열을 만듬 내용은 같지만 서로 다른 배열이다. cells === newCells 해보면 false 가 나온다.
+
+        // 62번줄 [CellState.flagged, CellState.visible].includes(currentCell.state) 랑 같다
+        if (currentCell.state === CellState.flagged ||
+            currentCell.state === CellState.visible) {
+            return;
+        }
+
+        // 숫자도 폭탄도 아닌 빈공간을 클릭할 경우
+        if (currentCell.value === CellValue.bomb) {
+            // take care of bomb click !
+            newCells = openMultipleCells(newCells, rowParam, colParam);
+        } else if (currentCell.value === CellValue.none) {
+
+        } else {
+            newCells[rowParam][colParam].state = CellState.visible;
+            setCells(newCells);
+        }
+
     }
 
     const handleFaceClick = (): void => {
