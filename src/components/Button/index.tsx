@@ -7,9 +7,11 @@ interface ButtonProps {
     col: number;
     state: CellState;
     value: CellValue;
+    onClick(rowParam: number, colParam: number): (...args: any[]) => void; // 일반적인 제네릭 함수를 리턴할때 이렇게 쓴다.
+    onContext(rowParam: number, colParam: number): (...args: any[]) => void;
 }
 
-const Button: React.FC<ButtonProps> = ({ row, col, state, value }) => {
+const Button: React.FC<ButtonProps> = ({ row, col, state, value, onClick, onContext }) => {
 
     const renderContent = (): React.ReactNode => {
         if (state === CellState.visible) {
@@ -26,16 +28,21 @@ const Button: React.FC<ButtonProps> = ({ row, col, state, value }) => {
             return value;
 
         } else if (state === CellState.flagged) {
-            // TODO: Display a flag emoji here! 
-            <span role="img" aria-label="face">
-                🚩
-                    </span>
+            return (
+                <span role="img" aria-label="face">
+                    🚩
+                </span>
+            )
         }
         return null;
     }
 
     return (
-        <div className={`Button ${state === CellState.visible ? 'visible' : ""} value-${value}`}>
+        <div
+            className={`Button ${state === CellState.visible ? 'visible' : ""} value-${value}`}
+            onClick={onClick(row, col)}
+            onContextMenu={onContext(row, col)}
+        >
             {renderContent()}
         </div>
     )

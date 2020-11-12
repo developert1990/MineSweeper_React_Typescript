@@ -22,7 +22,9 @@ export const generateCells = (): CellType[][] => {
         const randomRow = Math.floor(Math.random() * MAX_ROWS);
         const randomCol = Math.floor(Math.random() * MAX_COLUMNS);
 
+        // 같은 자리에 폭탄이 두번이상 오면 안되니까 
         const currenCell = cells[randomRow][randomCol];
+
         if (currenCell.value !== CellValue.bomb) {
             cells = cells.map((row, rowIndex) => row.map((cell, colIndex) => {
                 if (randomRow === rowIndex && randomCol === colIndex) {
@@ -40,10 +42,11 @@ export const generateCells = (): CellType[][] => {
 
 
     // calculate the numbers for each cell 
-
+    // 주위 폭탄 숫자 셈
     for (let rowIndex = 0; rowIndex < MAX_ROWS; rowIndex++) {
         for (let colIndex = 0; colIndex < MAX_COLUMNS; colIndex++) {
             const currentCell = cells[rowIndex][colIndex];
+            // 만약 현재 cell(칸)의 value(값)이 폭탄일 경우에 숫자를 세지 않고 넘기겟다.
             if (currentCell.value === CellValue.bomb) {
                 continue;
             }
@@ -94,4 +97,5 @@ export const generateCells = (): CellType[][] => {
     }
 
     return cells;
-}
+};
+

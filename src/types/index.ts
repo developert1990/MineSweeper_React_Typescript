@@ -9,13 +9,20 @@ export enum CellValue {
     seven,
     eight,
     bomb,
-}
+};
 
 
 export enum CellState {
     open,
     visible,
     flagged,
-}
+};
 
-export interface CellType { value: CellValue, state: CellState }
+export interface CellType { value: CellValue, state: CellState };
+
+export enum Face {
+    smile = '😄',
+    oh = '😅',
+    lost = '😫',
+    won = '😎'
+}
