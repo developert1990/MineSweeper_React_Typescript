@@ -18,7 +18,11 @@ export enum CellState {
     flagged,
 };
 
-export interface CellType { value: CellValue, state: CellState };
+export interface CellType {
+    value: CellValue;
+    state: CellState;
+    red?: boolean;
+};
 
 export enum Face {
     smile = '😄',

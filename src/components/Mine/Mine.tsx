@@ -4,6 +4,7 @@ import NumberDisplay from '../NumberDisplay';
 import { generateCells, openMultipleCells } from '../../utils';
 import Button from '../Button';
 import { CellState, CellType, CellValue, Face } from '../../types';
+import { MAX_COLUMNS, MAX_ROWS } from '../../constants';
 
 
 
@@ -14,6 +15,8 @@ const Mine: React.FC = () => {
     const [time, setTime] = useState<number>(0);
     const [live, setLive] = useState<boolean>(false);
     const [bombCounter, setBombCounter] = useState<number>(10);
+    const [hasLost, setHasLost] = useState<boolean>(false);
+    const [hasWon, setHasWon] = useState<boolean>(false);
 
 
 
@@ -45,18 +48,43 @@ const Mine: React.FC = () => {
             }
         }
 
-    }, [live, time])
+    }, [live, time]);
+
+    useEffect(() => {
+        if (hasLost) {
+            setFace(Face.lost);
+            setLive(false);
+        }
+    }, [hasLost]);
+
+    useEffect(() => {
+        if (hasWon) {
+            setLive(false);
+            setFace(Face.won);
+        }
+    }, [hasWon])
 
     const handleCellClick = (rowParam: number, colParam: number) => (): void => {
         // console.log(rowParam, colParam);
+        let newCells = cells.slice(); // 새로운 배열을 만듬 내용은 같지만 서로 다른 배열이다. cells === newCells 해보면 false 가 나온다.
+
         // start the game !!
         if (!live) {
+            // 첫번째로 클릭한 것이 폭탄일 경우 다시 cell을 섞는다.
+
+            let isABomb = newCells[rowParam][colParam].value === CellValue.bomb;
+            while (isABomb) {
+                newCells = generateCells();
+                if (newCells[rowParam][colParam].value !== CellValue.bomb) {
+                    isABomb = false;
+                    break;
+                }
+            }
 
             setLive(true);
         }
 
-        const currentCell = cells[rowParam][colParam];
-        let newCells = cells.slice(); // 새로운 배열을 만듬 내용은 같지만 서로 다른 배열이다. cells === newCells 해보면 false 가 나온다.
+        const currentCell = newCells[rowParam][colParam];
 
         // 62번줄 [CellState.flagged, CellState.visible].includes(currentCell.state) 랑 같다
         if (currentCell.state === CellState.flagged ||
@@ -64,26 +92,51 @@ const Mine: React.FC = () => {
             return;
         }
 
-        // 숫자도 폭탄도 아닌 빈공간을 클릭할 경우
+        // 폭탄을 클릭했을 경우
         if (currentCell.value === CellValue.bomb) {
             // take care of bomb click !
-            newCells = openMultipleCells(newCells, rowParam, colParam);
+            setHasLost(true);
+            newCells[rowParam][colParam].red = true;
+            newCells = showAllBombs();
+            setCells(newCells);
+            return;
+            // 숫자도 폭탄도 아닌 빈공간을 클릭할 경우
         } else if (currentCell.value === CellValue.none) {
-
+            newCells = openMultipleCells(newCells, rowParam, colParam);
         } else {
             newCells[rowParam][colParam].state = CellState.visible;
-            setCells(newCells);
         }
+
+        // check to see if you have won
+        let safeOpenCellsExists = false;
+        for (let row = 0; row < MAX_ROWS; row++) {
+            for (let col = 0; col < MAX_COLUMNS; col++) {
+                const currentCell = newCells[row][col];
+
+                if (currentCell.value !== CellValue.bomb && currentCell.state === CellState.open) {
+                    safeOpenCellsExists = true;
+                    break;
+                }
+            }
+        }
+        if (!safeOpenCellsExists) {
+            newCells = newCells.map(row => row.map(cell => {
+                if (cell.value === CellValue.bomb) {
+                    return {
+                        ...cell,
+                        state: CellState.flagged
+                    }
+                }
+                return cell;
+            }))
+            setHasWon(true);
+        }
+
+        setCells(newCells);
 
     }
 
-    const handleFaceClick = (): void => {
-        if (live) {
-            setLive(false);
-            setTime(0);
-            setCells(generateCells());
-        }
-    }
+
 
     const handleCellContext = (rowParam: number, colParam: number) => (e: React.MouseEvent<HTMLDivElement, MouseEvent>): void => {
         e.preventDefault();
@@ -111,6 +164,15 @@ const Mine: React.FC = () => {
         }
     }
 
+    const handleFaceClick = (): void => {
+
+        setLive(false);
+        setTime(0);
+        setCells(generateCells());
+        setHasLost(false);
+        setHasWon(false);
+    }
+
     const renderCells = (): React.ReactNode => {
         return cells.map((row, rowIndex) => row.map((cell, colIndex) =>
             <Button
@@ -119,10 +181,24 @@ const Mine: React.FC = () => {
                 value={cell.value}
                 onClick={handleCellClick}
                 onContext={handleCellContext}
+                red={cell.red}
                 row={rowIndex}
                 col={colIndex}
             />
         ))
+    }
+
+    const showAllBombs = (): CellType[][] => {
+        const currentCells = cells.slice();
+        return currentCells.map((row => row.map(cell => {
+            if (cell.value === CellValue.bomb) {
+                return {
+                    ...cell,
+                    state: CellState.visible
+                };
+            }
+            return cell;
+        })))
     }
 
 
